@@ -1,59 +1,37 @@
 const express = require('express');
-const net = require('net');
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PRINTER_IP = '192.168.1.110';
-const PRINTER_PORT = 9100;
-// app.post('/send', (req, res) => {
-//   const { command } = req.body;
-//   const client = new net.Socket();
+let printQueue = [];
 
-//   client.connect(9100, '192.168.1.110', () => {
-// // console.log(command);
-// const finalCmd = normalizeCommand(command);
-// client.write(Buffer.from(finalCmd, 'ascii'));
-//     setTimeout(() => {
-//       res.json({
-//         success: true,
-//         message: 'Command sent to printer'
-//       });
-//       client.destroy();
-//     }, 300);
-//   });
-
-//   client.on('error', err => {
-//     res.status(500).json({
-//       success: false,
-//       message: 'Printer connection failed',
-//       error: err.message
-//     });
-//   });
-// });
 app.post('/send', (req, res) => {
+  const job = {
+    id: Date.now(),
+    text: req.body.text,
+    status: 'QUEUED',
+  };
+
+  printQueue.push(job);
+
   res.json({
-    status: 'API LIVE',
-    received: req.body,
+    message: 'Print job received',
+    job,
   });
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log('Printer API running on port', PORT);
+app.get('/jobs', (req, res) => {
+  res.json(printQueue);
 });
 
-function normalizeCommand(cmd) {
-  // Remove extra spaces at end
-  cmd = cmd.trimEnd();
+app.delete('/jobs/:id', (req, res) => {
+  printQueue = printQueue.filter((j) => j.id != req.params.id);
+  res.json({ message: 'Job removed' });
+});
 
-  // If no newline at end, add it
-  if (!cmd.endsWith('\n')) {
-    cmd += '\n';
-  }
-
-  return cmd;
-}
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log('Cloud server running on port', PORT);
+});
