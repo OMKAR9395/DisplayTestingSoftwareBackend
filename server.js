@@ -22,7 +22,7 @@ app.post('/send', (req, res) => {
     id: Date.now(),
     text,
     status: 'QUEUED',
-    createdAt: new Date(),
+    message: 'Job queued successfully',
   };
 
   printQueue.push(job);
@@ -37,7 +37,7 @@ app.post('/send', (req, res) => {
  * 2️⃣ Agent → Get pending jobs
  */
 app.get('/jobs', (req, res) => {
-  res.json(printQueue);
+  res.json(printQueue.filter((j) => j.status === 'QUEUED'));
 });
 
 /**
@@ -48,6 +48,15 @@ app.delete('/jobs/:id', (req, res) => {
   printQueue = printQueue.filter((job) => job.id !== id);
 
   res.json({ message: 'Job removed' });
+});
+
+app.put('/jobs/:id/status', (req, res) => {
+  const job = printQueue.find((j) => j.id == req.params.id);
+  if (job) {
+    job.status = req.body.status;
+    job.message = req.body.message;
+  }
+  res.json({ ok: true });
 });
 
 /**
