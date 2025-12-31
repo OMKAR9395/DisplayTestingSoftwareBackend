@@ -32,6 +32,31 @@ app.post('/send', (req, res) => {
     job,
   });
 });
+app.get('/jobs', (req, res) => {
+  res.json(printQueue.filter((j) => j.status === 'QUEUED'));
+});
+app.put('/jobs/:id/status', (req, res) => {
+  const job = printQueue.find((j) => j.id == req.params.id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+
+  job.status = req.body.status;
+  job.message = req.body.message;
+
+  res.json({ message: 'Status updated' });
+});
+app.delete('/jobs/:id', (req, res) => {
+  printQueue = printQueue.filter((j) => j.id != req.params.id);
+  res.json({ message: 'Job deleted' });
+});
+app.get('/jobs/:id', (req, res) => {
+  const job = printQueue.find((j) => j.id == req.params.id);
+  if (!job) {
+    return res.status(404).json({ message: 'Job not found' });
+  }
+  res.json(job);
+});
 
 /**
  * 2️⃣ Agent → Get pending jobs
